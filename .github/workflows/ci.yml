@@ -44,6 +44,10 @@ jobs:
       ihp-sg13g2_hash: ${{ steps.set-rev.outputs.ihp-sg13g2_hash }}
     steps:
       - uses: actions/checkout@v6
+      - name: Checkout submodules
+        uses: actions/checkout@v6
+        with:
+          submodules: true
       - name: Python Dependencies
         run: |
           pip3 install poetry poetry-plugin-export
@@ -73,7 +77,7 @@ jobs:
       - name: Enable sky130 PDK
         run: |
           export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
-          ciel enable --pdk sky130 --pdk-root ./.ciel-sky130 ${{ steps.set-rev.outputs.sky130_hash }}
+          ciel build --pdk-family sky130 ${{ steps.set-rev.outputs.sky130_hash }} --use-repo-at open_pdks=$GITHUB_WORKSPACE/open_pdks/ -l all
       - name: Cache gf180mcu PDK
         uses: actions/cache@v5
         with:
@@ -94,10 +98,6 @@ jobs:
         run: |
           export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
           ciel enable --pdk ihp-sg13g2 --pdk-root ./.ciel-ihp-sg13g2 ${{ steps.set-rev.outputs.ihp-sg13g2_hash }}
-      - name: Checkout submodules
-        uses: actions/checkout@v6
-        with:
-          submodules: true
   lint:
     name: Lint
     runs-on: ubuntu-22.04
