@@ -4,3 +4,6 @@
 [submodule "test/steps/all"]
 	path = test/steps/all
 	url = ../../librelane/librelane-step-unit-tests.git
+[submodule "open_pdks"]
+	path = open_pdks
+	url = https://github.com/jeras/open_pdks.git
