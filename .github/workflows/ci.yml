@@ -77,7 +77,11 @@ jobs:
       - name: Enable sky130 PDK
         run: |
           export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
-          ciel build --pdk-family sky130 ${{ steps.set-rev.outputs.sky130_hash }} --use-repo-at open_pdks=$GITHUB_WORKSPACE/open_pdks/ -l all
+          ciel build --pdk-family sky130 ${{ steps.set-rev.outputs.sky130_hash }} --use-repo-at open_pdks=$GITHUB_WORKSPACE/open_pdks/
+          ciel build --pdk-family sky130 ${{ steps.set-rev.outputs.sky130_hash }} --use-repo-at open_pdks=$GITHUB_WORKSPACE/open_pdks/ -l sky130_fd_sc_hdll
+          ciel build --pdk-family sky130 ${{ steps.set-rev.outputs.sky130_hash }} --use-repo-at open_pdks=$GITHUB_WORKSPACE/open_pdks/ -l sky130_fd_sc_hs
+          ciel build --pdk-family sky130 ${{ steps.set-rev.outputs.sky130_hash }} --use-repo-at open_pdks=$GITHUB_WORKSPACE/open_pdks/ -l sky130_fd_sc_ms
+          ciel build --pdk-family sky130 ${{ steps.set-rev.outputs.sky130_hash }} --use-repo-at open_pdks=$GITHUB_WORKSPACE/open_pdks/ -l sky130_fd_sc_ls
       - name: Cache gf180mcu PDK
         uses: actions/cache@v5
         with:
