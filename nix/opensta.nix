@@ -2,6 +2,7 @@
 # Copyright (c) 2025 LibreLane Contributors
 # Copyright (c) 2023-2024 UmbraLogic Technologies LLC
 {
+  gtest,
   lib,
   clangStdenv,
   fetchFromGitHub,
@@ -17,10 +18,9 @@
   zlib,
   eigen,
   ninja,
-  gtest,
-  rev ? "a56edf27677801ca8e9bb42fcaa1d5a6e40d5d11",
-  rev-date ? "2026-04-11",
-  sha256 ? "sha256-OA8oRug7keFopBT3s/MA08AzalHadwOmjI9B4A5vJ0c=",
+  rev ? "43177bba8f5f88dfb7dc35795242080a4fe2e986",
+  rev-date ? "2026-04-05",
+  sha256 ? "sha256-o769Y4OPYcnNfHxM4I/3AIFa23lrFUqtnY7oysMaYX8=",
 }:
 clangStdenv.mkDerivation (finalAttrs: {
   name = "opensta";
@@ -82,6 +82,7 @@ clangStdenv.mkDerivation (finalAttrs: {
   '';
 
   nativeBuildInputs = [
+    gtest
     swig
     pkg-config
     cmake
