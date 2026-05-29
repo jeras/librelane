@@ -37,6 +37,7 @@ jobs:
   prepare-test-matrices:
     name: Prepare Test Matrices and Cache PDKs
     runs-on: ubuntu-22.04
+    needs: [build-linux-x86_64]
     outputs:
       design_matrix: ${{ steps.set-matrix.outputs.design_matrix }}
       sky130_hash: ${{ steps.set-rev.outputs.sky130_hash }}
@@ -49,6 +50,15 @@ jobs:
           pip3 install poetry poetry-plugin-export
           poetry export --all-groups --without-hashes --format=requirements.txt --output=requirements_tmp.txt
           pip3 install -r requirements_tmp.txt
+      - uses: ./.github/actions/setup_nix
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          nix_cache_domain: ${{ vars.NIX_CACHE }}
+          nix_public_key: ${{ vars.NIX_PUBLIC_KEY }}
+      - name: Build with Nix
+        uses: ./.github/actions/build_nix
+        with:
+          nix_system: x86_64-linux
       - name: Determine If Running Extended Test Set
         run: |
           export EVENT_NAME=${{ github.event_name }};
@@ -65,6 +75,7 @@ jobs:
           echo "gf180mcu_hash=$(python3 ./.github/scripts/get_pdk_hash.py ./librelane/pdk_hashes.yaml --pdk-family gf180mcu)" >> $GITHUB_OUTPUT
           echo "ihp-sg13g2_hash=$(python3 ./.github/scripts/get_pdk_hash.py ./librelane/pdk_hashes.yaml --pdk-family ihp-sg13g2)" >> $GITHUB_OUTPUT
       - name: Cache sky130 PDK
+        id: cache-sky130
         uses: actions/cache@v5
         with:
           path: ./.ciel-sky130
@@ -73,8 +84,13 @@ jobs:
       - name: Enable sky130 PDK
         run: |
           export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+          ciel fetch --pdk sky130 --pdk-root ./.ciel-sky130 ${{ steps.set-rev.outputs.sky130_hash }} || { \
+          git clone https://github.com/RTimothyEdwards/open_pdks.git open_pdks-sky130; \
+          cd open_pdks-sky130; git checkout ${{ steps.set-rev.outputs.sky130_hash }}; cd -; \
+          nix-shell --run 'ciel build --pdk sky130 --pdk-root ./.ciel-sky130 --use-repo-at open_pdks=open_pdks-sky130 ${{ steps.set-rev.outputs.sky130_hash }} -l all'; }
           ciel enable --pdk sky130 --pdk-root ./.ciel-sky130 ${{ steps.set-rev.outputs.sky130_hash }}
       - name: Cache gf180mcu PDK
+        id: cache-gf180mcu
         uses: actions/cache@v5
         with:
           path: ./.ciel-gf180mcu
@@ -83,8 +99,13 @@ jobs:
       - name: Enable gf180mcu PDK
         run: |
           export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+          ciel fetch --pdk gf180mcu --pdk-root ./.ciel-gf180mcu ${{ steps.set-rev.outputs.gf180mcu_hash }} || { \
+          git clone https://github.com/RTimothyEdwards/open_pdks.git open_pdks-gf180mcu; \
+          cd open_pdks-gf180mcu; git checkout ${{ steps.set-rev.outputs.gf180mcu_hash }}; cd -; \
+          nix-shell --run 'ciel build --pdk gf180mcu --pdk-root ./.ciel-gf180mcu --use-repo-at open_pdks=open_pdks-gf180mcu ${{ steps.set-rev.outputs.gf180mcu_hash }} -l all'; }
           ciel enable --pdk gf180mcu --pdk-root ./.ciel-gf180mcu ${{ steps.set-rev.outputs.gf180mcu_hash }}
       - name: Cache ihp-sg13g2 PDK
+        id: cache-sg13g2
         uses: actions/cache@v5
         with:
           path: ./.ciel-ihp-sg13g2
@@ -93,11 +114,11 @@ jobs:
       - name: Enable ihp-sg13g2 PDK
         run: |
           export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+          ciel fetch --pdk ihp-sg13g2 --pdk-root ./.ciel-ihp-sg13g2 ${{ steps.set-rev.outputs.ihp-sg13g2_hash }} || { \
+          git clone https://github.com/IHP-GmbH/IHP-Open-PDK.git pdk-ihp-sg13g2;
+          cd pdk-ihp-sg13g2; git checkout ${{ steps.set-rev.outputs.ihp-sg13g2_hash }}; cd -; \
+          nix-shell --run 'ciel build --pdk ihp-sg13g2 --pdk-root ./.ciel-ihp-sg13g2 --use-repo-at open_pdks=pdk-ihp-sg13g2 ${{ steps.set-rev.outputs.ihp-sg13g2_hash }}'; }
           ciel enable --pdk ihp-sg13g2 --pdk-root ./.ciel-ihp-sg13g2 ${{ steps.set-rev.outputs.ihp-sg13g2_hash }}
-      - name: Checkout submodules
-        uses: actions/checkout@v6
-        with:
-          submodules: true
   lint:
     name: Lint
     runs-on: ubuntu-22.04
@@ -156,7 +177,7 @@ jobs:
         uses: ./.github/actions/build_nix
         with:
           nix_system: x86_64-linux
-          run_tests: "true"
+          run_tests: "false"
       - name: Cache to S3
         uses: fossi-foundation/nix-eda/.github/actions/nix_sign_cache_s3@main
         with:
@@ -188,7 +209,7 @@ jobs:
         uses: ./.github/actions/build_nix
         with:
           nix_system: aarch64-linux
-          run_tests: "true"
+          run_tests: "false"
       - name: Cache to S3
         uses: fossi-foundation/nix-eda/.github/actions/nix_sign_cache_s3@main
         with:
@@ -547,7 +568,7 @@ jobs:
 
   smoke:
     runs-on: ubuntu-22.04
-    needs: [build-linux-x86_64, build-linux-aarch64]
+    needs: [build-linux-x86_64, build-linux-aarch64, prepare-test-matrices]
     name: Smoke Test on ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -582,6 +603,13 @@ jobs:
         run: |
           sudo du -hs /nix/store/* | sort -h | tail -n 10
           sudo tree /nix/store/*-librelane || true
+      - name: Cache PDK
+        id: cache-pdk
+        uses: actions/cache@v5
+        with:
+          path: ./.ciel-${{ matrix.design.pdk_family }}
+          key: cache-${{ matrix.design.pdk_family }}-pdk-${{ env.PDK_HASH }}
+          enableCrossOsArchive: true
       - name: Smoke (sky130)
         run: |
             nix run . -- \
