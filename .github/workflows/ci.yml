@@ -87,7 +87,7 @@ jobs:
           ciel fetch --pdk sky130 --pdk-root ./.ciel-sky130 ${{ steps.set-rev.outputs.sky130_hash }} --include-libraries all || { \
           git clone https://github.com/RTimothyEdwards/open_pdks.git open_pdks-sky130; \
           cd open_pdks-sky130; git checkout ${{ steps.set-rev.outputs.sky130_hash }}; cd -; \
-          nix-shell --run 'ciel build --pdk sky130 --pdk-root ./.ciel-sky130 --use-repo-at open_pdks=open_pdks-sky130 ${{ steps.set-rev.outputs.sky130_hash }} -l all'; }
+          nix-shell --run 'ciel build --pdk sky130 --pdk-root ./.ciel-sky130 --use-repo-at open_pdks=open_pdks-sky130 ${{ steps.set-rev.outputs.sky130_hash }}'; }
           ciel enable --pdk sky130 --pdk-root ./.ciel-sky130 ${{ steps.set-rev.outputs.sky130_hash }}
       - name: Cache gf180mcu PDK
         id: cache-gf180mcu
@@ -102,7 +102,7 @@ jobs:
           ciel fetch --pdk gf180mcu --pdk-root ./.ciel-gf180mcu ${{ steps.set-rev.outputs.gf180mcu_hash }} --include-libraries all || { \
           git clone https://github.com/RTimothyEdwards/open_pdks.git open_pdks-gf180mcu; \
           cd open_pdks-gf180mcu; git checkout ${{ steps.set-rev.outputs.gf180mcu_hash }}; cd -; \
-          nix-shell --run 'ciel build --pdk gf180mcu --pdk-root ./.ciel-gf180mcu --use-repo-at open_pdks=open_pdks-gf180mcu ${{ steps.set-rev.outputs.gf180mcu_hash }} -l all'; }
+          nix-shell --run 'ciel build --pdk gf180mcu --pdk-root ./.ciel-gf180mcu --use-repo-at open_pdks=open_pdks-gf180mcu ${{ steps.set-rev.outputs.gf180mcu_hash }}'; }
           ciel enable --pdk gf180mcu --pdk-root ./.ciel-gf180mcu ${{ steps.set-rev.outputs.gf180mcu_hash }}
       - name: Cache ihp-sg13g2 PDK
         id: cache-sg13g2
