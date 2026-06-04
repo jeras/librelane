@@ -87,7 +87,7 @@ jobs:
           ciel fetch --pdk sky130 --pdk-root ./.ciel-sky130 ${{ steps.set-rev.outputs.sky130_hash }} || { \
           git clone https://github.com/RTimothyEdwards/open_pdks.git open_pdks-sky130; \
           cd open_pdks-sky130; git checkout ${{ steps.set-rev.outputs.sky130_hash }}; cd -; \
-          nix-shell --run 'ciel build --pdk sky130 --pdk-root ./.ciel-sky130 --use-repo-at open_pdks=open_pdks-sky130 ${{ steps.set-rev.outputs.sky130_hash }}'; }
+          nix-shell --run 'ciel build --pdk sky130 --pdk-root ./.ciel-sky130 --use-repo-at open_pdks=open_pdks-sky130 ${{ steps.set-rev.outputs.sky130_hash }} -l all'; }
           ciel enable --pdk sky130 --pdk-root ./.ciel-sky130 ${{ steps.set-rev.outputs.sky130_hash }}
       - name: Cache gf180mcu PDK
         id: cache-gf180mcu
@@ -301,7 +301,7 @@ jobs:
             },
           ]
     runs-on: ${{ matrix.os.runner }}
-    needs: [build-linux-x86_64, build-linux-aarch64]
+    needs: [build-linux-x86_64, build-linux-aarch64, prepare-test-matrices]
     name: Build AppImage (${{ matrix.os.arch }})
     steps:
       - name: Maximize build space
