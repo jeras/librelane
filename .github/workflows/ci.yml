@@ -127,7 +127,7 @@ jobs:
           ciel fetch --pdk ihp-sg13g2 --pdk-root ./.ciel-ihp-sg13g2 ${{ steps.set-rev.outputs.ihp-sg13g2_hash }} || { \
           git clone https://github.com/IHP-GmbH/IHP-Open-PDK.git pdk-ihp-sg13g2;
           cd pdk-ihp-sg13g2; git checkout ${{ steps.set-rev.outputs.ihp-sg13g2_hash }}; cd -; \
-          nix-shell --run 'ciel build --pdk ihp-sg13g2 --pdk-root ./.ciel-ihp-sg13g2 --use-repo-at open_pdks=pdk-ihp-sg13g2 ${{ steps.set-rev.outputs.ihp-sg13g2_hash }}--clear-build-artifacts';
+          nix-shell --run 'ciel build --pdk ihp-sg13g2 --pdk-root ./.ciel-ihp-sg13g2 --use-repo-at open_pdks=pdk-ihp-sg13g2 ${{ steps.set-rev.outputs.ihp-sg13g2_hash }} --clear-build-artifacts';
           rm -rf pdk-ihp-sg13g2; }
           ciel enable --pdk ihp-sg13g2 --pdk-root ./.ciel-ihp-sg13g2 ${{ steps.set-rev.outputs.ihp-sg13g2_hash }}
   lint:
