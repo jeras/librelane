@@ -27,6 +27,7 @@ source $::env(SCRIPTS_DIR)/openroad/common/set_rc.tcl
 # estimate wire rc parasitics
 estimate_parasitics -placement
 
+set_dont_use "*clkbuf* *clkdly* *dlygate* *dlymetal*"
 
 # Buffer I/O
 if { $::env(DESIGN_REPAIR_REMOVE_BUFFERS) } {
